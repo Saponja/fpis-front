@@ -1,5 +1,6 @@
-import { Grid, makeStyles, Typography } from "@material-ui/core";
+import { Grid, makeStyles, Typography, Snackbar } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
+import MuiAlert from "@material-ui/lab/Alert";
 import { CustomButton } from "../controls/CustomButton";
 import { CustomTextField } from "../controls/CustomTextField";
 import { useApi } from "../hooks/useApi";
@@ -38,9 +39,26 @@ const initialValues = {
 export const Home = (params) => {
   const classes = useStyles();
 
+  
+
   const { values, setValues, handleInputChange } = useForm(initialValues);
   const [forUpdate, setForUpdate] = useState(false);
   const {getById, Add, Update} = useApi();
+  const [open, setOpen] = useState(false);
+  const [color, setColor] = useState("success")
+  const [text, setText] = useState("")
+
+  function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+  }
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
 
   const onClickPronadji = e => {
     e.preventDefault();
@@ -50,7 +68,9 @@ export const Home = (params) => {
         naziv : response.nazivSredstva,
       })
     }, error => {
-      alert(error.response.data.error);
+      setColor("error");
+      setText(error.response.data.error);
+      setOpen(true);
     })
     setForUpdate(true)
   }
@@ -64,20 +84,28 @@ export const Home = (params) => {
           alert("Uspesno ste ubacili sredsvo")
         },
         error => {
-          alert(error.response.data.error);
+          setColor("error");
+          setText(error.response.data.error);
+          setOpen(true);
+          
         }
       );
      resetForm()
 
     }else{
       Update("sredstvo/", values.id, {nazivSredstva : values.naziv}).then(response => {
-        alert("Uspesno ste update-ovali prevozno sredstvo")
+        
+        setColor("success");
+          setText("Uspesno ste update-ovali prevozno sredstvo");
+          setOpen(true);
         setValues({
           ...values,
           naziv : response.nazivSredstva
         })
       }, error => {
-        alert(error.response.data.error);
+          setColor("error");
+          setText(error.response.data.error);
+          setOpen(true);
 
       })
       setForUpdate(false)
@@ -97,13 +125,7 @@ export const Home = (params) => {
       naziv : ""
     })
     setForUpdate(false)
-
   }
-
-
-
-
-
 
   return (
     <div className={classes.root}>
@@ -162,6 +184,11 @@ export const Home = (params) => {
           />
         </Grid>
       </Grid>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity={color}>
+          {text}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
